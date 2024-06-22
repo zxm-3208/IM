@@ -4,8 +4,8 @@ import (
 	"IM/apps/user/models"
 	"IM/pkg/ctxdata"
 	"IM/pkg/encrypt"
+	"IM/pkg/xerr"
 	"context"
-	"errors"
 	"time"
 
 	"IM/apps/user/rpc/internal/svc"
@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	ErrPhoneNotRegister = errors.New("手机号没有注册")
-	ErrUserPwdError     = errors.New("密码不正确")
+	ErrPhoneNotRegister = xerr.New(xerr.SERVER_COMMON_ERROR, "手机号没有注册")
+	ErrUserPwdError     = xerr.New(xerr.SERVER_COMMON_ERROR, "密码不正确")
 )
 
 type LoginLogic struct {

@@ -5,9 +5,9 @@ import (
 	"IM/pkg/ctxdata"
 	"IM/pkg/encrypt"
 	"IM/pkg/wuid"
+	"IM/pkg/xerr"
 	"context"
 	"database/sql"
-	"errors"
 	"time"
 
 	"IM/apps/user/rpc/internal/svc"
@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	ErrPhoneIsRegistered = errors.New("手机号已经注册过了")
+	ErrPhoneIsRegistered = xerr.New(xerr.SERVER_COMMON_ERROR, "手机号已经注册过了")
 )
 
 type RegisterLogic struct {

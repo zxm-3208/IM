@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/zeromicro/go-zero/core/logx"
 	"strings"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
@@ -31,6 +32,8 @@ type (
 		Update(ctx context.Context, data *Users) error
 		FindByPhone(ctex context.Context, phone string) (*Users, error)
 		Delete(ctx context.Context, id string) error
+		ListByName(ctx context.Context, name string) ([]*Users, error)
+		ListByIds(ctx context.Context, ids []string) ([]*Users, error)
 	}
 
 	defaultUsersModel struct {
@@ -55,6 +58,31 @@ func newUsersModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *
 	return &defaultUsersModel{
 		CachedConn: sqlc.NewConn(conn, c, opts...),
 		table:      "`users`",
+	}
+}
+
+func (m *defaultUsersModel) ListByName(ctx context.Context, name string) ([]*Users, error) {
+	query := fmt.Sprintf("select %s from %s where `nickname` like ?", usersRows, m.table)
+	logx.Info("usersRows:", usersRows)
+	var resp []*Users
+	err := m.QueryRowNoCacheCtx(ctx, &resp, query, fmt.Sprint("%", name, "%"))
+	switch err {
+	case nil:
+		return resp, nil
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultUsersModel) ListByIds(ctx context.Context, ids []string) ([]*Users, error) {
+	query := fmt.Sprintf("select %s from %s where `id` in ('%s')", usersRows, m.table, strings.Join(ids, "',"))
+	var resp []*Users
+	err := m.QueryRowNoCacheCtx(ctx, &resp, query)
+	switch err {
+	case nil:
+		return resp, nil
+	default:
+		return nil, err
 	}
 }
 
