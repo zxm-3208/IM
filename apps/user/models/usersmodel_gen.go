@@ -62,10 +62,10 @@ func newUsersModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *
 }
 
 func (m *defaultUsersModel) ListByName(ctx context.Context, name string) ([]*Users, error) {
-	query := fmt.Sprintf("select %s from %s where `nickname` like ?", usersRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `nickname` like ? ", usersRows, m.table)
 	logx.Info("usersRows:", usersRows)
 	var resp []*Users
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query, fmt.Sprint("%", name, "%"))
+	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, fmt.Sprint("%", name, "%"))
 	switch err {
 	case nil:
 		return resp, nil
@@ -75,9 +75,10 @@ func (m *defaultUsersModel) ListByName(ctx context.Context, name string) ([]*Use
 }
 
 func (m *defaultUsersModel) ListByIds(ctx context.Context, ids []string) ([]*Users, error) {
-	query := fmt.Sprintf("select %s from %s where `id` in ('%s')", usersRows, m.table, strings.Join(ids, "',"))
+	query := fmt.Sprintf("select %s from %s where `id` in ('%s') ", usersRows, m.table, strings.Join(ids, "','"))
+
 	var resp []*Users
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query)
+	err := m.QueryRowsNoCacheCtx(ctx, &resp, query)
 	switch err {
 	case nil:
 		return resp, nil
@@ -141,7 +142,7 @@ func (m *defaultUsersModel) Insert(ctx context.Context, data *Users) (sql.Result
 func (m *defaultUsersModel) Update(ctx context.Context, data *Users) error {
 	usersIdKey := fmt.Sprintf("%s%v", cacheUsersIdPrefix, data.Id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, usersRowsWithPlaceHolder)
+		query := fmt.Sprintf("update %s set %s where `id` = ? ", m.table, usersRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, data.Avatar, data.Nickname, data.Phone, data.Password, data.Status, data.Sex, data.Id)
 	}, usersIdKey)
 	return err
