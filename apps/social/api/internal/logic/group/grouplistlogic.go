@@ -1,7 +1,10 @@
 package group
 
 import (
+	"IM/apps/social/rpc/socialclient"
+	"IM/pkg/ctxdata"
 	"context"
+	"github.com/jinzhu/copier"
 
 	"IM/apps/social/api/internal/svc"
 	"IM/apps/social/api/internal/types"
@@ -24,7 +27,17 @@ func NewGroupListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GroupLi
 }
 
 func (l *GroupListLogic) GroupList(req *types.GroupListRep) (resp *types.GroupListResp, err error) {
-	// todo: add your logic here and delete this line
+	uid := ctxdata.GetUId(l.ctx)
+	list, err := l.svcCtx.Social.GroupList(l.ctx, &socialclient.GroupListReq{
+		UserId: uid,
+	})
 
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	var respList []*types.Groups
+	copier.Copy(&respList, list.List)
+
+	return &types.GroupListResp{List: respList}, nil
 }

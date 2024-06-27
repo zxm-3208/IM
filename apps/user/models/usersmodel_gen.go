@@ -100,7 +100,7 @@ func (m *defaultUsersModel) FindOne(ctx context.Context, id string) (*Users, err
 	usersIdKey := fmt.Sprintf("%s%v", cacheUsersIdPrefix, id)
 	var resp Users
 	err := m.QueryRowCtx(ctx, &resp, usersIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", usersRows, m.table)
+		query := fmt.Sprintf("select %s from %s where `id` = ?", usersRows, m.table)
 		return conn.QueryRowCtx(ctx, v, query, id)
 	})
 	switch err {

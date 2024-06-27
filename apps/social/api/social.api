@@ -188,7 +188,7 @@ service social {
 	@handler groupPutInList
 	get  /group/putIns(GroupPutInListRep) returns(GroupPutInListResp)
 
-	@doc "用户申群列表"
+	@doc "用户组群列表"
 	@handler groupList
 	get  /groups(GroupListRep) returns(GroupListResp)
 
