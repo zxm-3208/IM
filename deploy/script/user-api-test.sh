@@ -1,10 +1,8 @@
 #!/bin/bash
-reso_addr='registry.cn-hangzhou.aliyuncs.com/my-im/user-rpc-dev'
+reso_addr='registry.cn-hangzhou.aliyuncs.com/my-im/user-api-dev'
 tag='latest'
 
-pod_ip="139.9.214.194"
-
-container_name="im-user-rpc-test"
+container_name="im-user-api-test"
 
 docker stop ${container_name}
 
@@ -17,4 +15,4 @@ docker pull ${reso_addr}:${tag}
 
 # 如果需要指定配置文件的
 # docker run -p 10001:8080 --network easy-chat -v /easy-chat/config/user-rpc:/user/conf/ --name=${container_name} -d ${reso_addr}:${tag}
-docker run -p 10000:10000 -e POD_IP=${pod_ip} --name=${container_name} -d ${reso_addr}:${tag}
+docker run -p 8888:8888 --name=${container_name} -d ${reso_addr}:${tag}
