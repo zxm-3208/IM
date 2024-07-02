@@ -13,9 +13,11 @@ import (
 type Server struct {
 	sync.RWMutex // 读写锁
 
+	opt            *option
 	authentication Authentication
-	routes         map[string]HandlerFunc // 方法名和handler对应的路由映射
-	addr           string
+
+	routes map[string]HandlerFunc // 方法名和handler对应的路由映射
+	addr   string
 
 	connToUser map[*websocket.Conn]string
 	userToConn map[string]*websocket.Conn
@@ -24,9 +26,12 @@ type Server struct {
 	logx.Logger
 }
 
-func NewServer(addr string) *Server {
+func NewServer(addr string, opts ...Options) *Server {
+	opt := newOption(opts...)
+
 	return &Server{
 		authentication: opt.Authentication,
+		opt:            &opt,
 		addr:           addr,
 		upgrader:       websocket.Upgrader{},
 		Logger:         logx.WithContext(context.Background()),
@@ -43,6 +48,11 @@ func (s *Server) ServerWs(w http.ResponseWriter, r *http.Request) {
 			s.Errorf("server handler ws recover err %v", err)
 		}
 	}()
+
+	if !s.authentication.Auth(s, w, r) {
+		s.Info("authentication failed")
+		return
+	}
 
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -92,6 +102,33 @@ func (s *Server) handlerConn(conn *websocket.Conn) {
 	}
 }
 
+func (s *Server) SendByUserId(msg interface{}, sendIds ...string) error {
+	if len(sendIds) == 0 {
+		return nil
+	}
+
+	return s.Send(msg, s.GetConns(sendIds...)...)
+}
+
+func (s *Server) Send(msg interface{}, conns ...*websocket.Conn) error {
+	if len(conns) == 0 {
+		return nil
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	for _, conn := range conns {
+		if err = conn.WriteMessage(websocket.TextMessage, data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *Server) AddRoute(rs []Route) {
 	for _, r := range rs {
 		s.routes[r.Method] = r.Handler
@@ -99,7 +136,7 @@ func (s *Server) AddRoute(rs []Route) {
 }
 
 func (s *Server) Start() {
-	http.HandleFunc("/ws", s.ServerWs)
+	http.HandleFunc(s.opt.pattern, s.ServerWs)
 	http.ListenAndServe(s.addr, nil)
 }
 
@@ -107,11 +144,20 @@ func (s *Server) Stop() {
 	fmt.Println("stop server")
 }
 
-func (s *Server) GetConn(uid string) *Conn {
+func (s *Server) GetConns(uids ...string) []*websocket.Conn {
+	if len(uids) == 0 {
+		return nil
+	}
+
 	s.RWMutex.RLock()
 	defer s.RWMutex.RUnlock()
 
-	return s.userToConn[uid]
+	res := make([]*websocket.Conn, 0, len(uids))
+	for _, uid := range uids {
+		res = append(res, s.userToConn[uid])
+	}
+
+	return res
 }
 
 func (s *Server) GetUsers(conns ...*websocket.Conn) []string {

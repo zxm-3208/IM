@@ -2,6 +2,7 @@ package main
 
 import (
 	"IM/apps/im/ws/internal/config"
+	"IM/apps/im/ws/internal/handler"
 	"IM/apps/im/ws/internal/svc"
 	"IM/apps/im/ws/websocket"
 	"flag"
@@ -22,10 +23,11 @@ func main() {
 	}
 
 	srv := websocket.NewServer(c.ListenOn)
-
 	defer srv.Stop()
 
-	svc.NewServiceContext(c)
+	ctx := svc.NewServiceContext(c)
+	handler.RegisterHandlers(srv, ctx)
+
 	fmt.Printf("Starting websocket server at %v ...\n", c.ListenOn)
 	srv.Start()
 }
