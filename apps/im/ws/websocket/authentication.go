@@ -7,13 +7,14 @@ import (
 )
 
 type Authentication interface {
-	Auth(s *Server, w http.ResponseWriter, r *http.Request) bool
+	Auth(w http.ResponseWriter, r *http.Request) bool
 	UserId(r *http.Request) string
 }
 
 type authentication struct{}
 
-func (*authentication) Auth(s *Server, w http.ResponseWriter, r *http.Request) bool {
+// 提供一个接口，默认为true, 在auth中重写
+func (*authentication) Auth(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 

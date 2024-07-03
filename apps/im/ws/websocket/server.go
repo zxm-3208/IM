@@ -49,7 +49,8 @@ func (s *Server) ServerWs(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if !s.authentication.Auth(s, w, r) {
+	// 判断该请求是否有访问该服务器的权限
+	if !s.authentication.Auth(w, r) {
 		s.Info("authentication failed")
 		return
 	}
