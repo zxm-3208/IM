@@ -168,6 +168,13 @@ func (s *Server) Stop() {
 	fmt.Println("stop server")
 }
 
+func (s *Server) GetConn(uid string) *Conn {
+	s.RWMutex.RLock()
+	defer s.RWMutex.RUnlock()
+
+	return s.userToConn[uid]
+}
+
 func (s *Server) GetConns(uids ...string) []*Conn {
 	if len(uids) == 0 {
 		return nil

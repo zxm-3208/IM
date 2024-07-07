@@ -11,7 +11,7 @@ type Config struct {
 
 	ListenOn string
 
-	Cache redis.RedisConf
+	Redisx redis.RedisConf
 
 	Mongo struct {
 		Url string

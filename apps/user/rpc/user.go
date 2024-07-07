@@ -26,6 +26,11 @@ func main() {
 	conf.MustLoad(*configFile, &c)
 	ctx := svc.NewServiceContext(c)
 
+	// 设置kafka中wsclient的超级用户token
+	if err := ctx.SetRootToken(); err != nil {
+		panic(err)
+	}
+
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		user.RegisterUserServer(grpcServer, server.NewUserServer(ctx))
 
