@@ -24,7 +24,6 @@ func Chat(srvCtx *svc.ServiceContext) websocket.HandlerFunc {
 
 		l := logic.NewConversation(context.Background(), srv, srvCtx)
 		if err := l.SingleChat(&data, srv.GetUsers(conn)[0]); err != nil {
-			fmt.Println("222222222222222222")
 			srv.Send(websocket.NewErrorMessage(err), conn)
 		}
 
