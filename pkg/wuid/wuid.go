@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/edwingeng/wuid/mysql/wuid"
+	"sort"
+	"strconv"
 )
 
 var w *wuid.WUID
@@ -26,4 +28,17 @@ func GetUid(dsn string) string {
 		Init(dsn)
 	}
 	return fmt.Sprintf("%#016x", w.Next())
+}
+
+// 先对id进行排序，然后依据顺序合并成一个新的唯一ID
+func ConbineId(aid, bid string) string {
+	ids := []string{aid, bid}
+
+	sort.Slice(ids, func(i, j int) bool {
+		a, _ := strconv.ParseUint(ids[i], 0, 64)
+		b, _ := strconv.ParseUint(ids[j], 0, 64)
+		return a < b
+	})
+
+	return fmt.Sprintf("%s_%s", ids[0], ids[1])
 }

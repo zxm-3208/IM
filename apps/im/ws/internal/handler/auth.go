@@ -35,10 +35,6 @@ func (j *JwtAuth) Auth(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
-	j.Infof("token %v ", tok)
-
-	j.Infof("token %v ", tok.Claims)
-
 	claims, ok := tok.Claims.(jwt.MapClaims)
 	if !ok {
 		j.Errorf("parse claims err %v ", claims)

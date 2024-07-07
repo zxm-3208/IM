@@ -27,7 +27,7 @@ func main() {
 
 	srv := websocket.NewServer(c.ListenOn,
 		websocket.WithAuthentication(handler.NewJwtAuth(ctx)),
-		websocket.WithMaxConnectionIdle(10*time.Second),
+		websocket.WithMaxConnectionIdle(10*time.Minute),
 	)
 	defer srv.Stop()
 

@@ -57,7 +57,7 @@ func (s *Server) ServerWs(w http.ResponseWriter, r *http.Request) {
 
 	// 判断该请求是否有访问该服务器的权限
 	if !s.authentication.Auth(w, r) {
-		s.Send(&Message{Type: FrameData, Data: fmt.Sprintf("不具备访问权限")}, conn)
+		s.Send(&Message{Type: FrameErr, Data: fmt.Sprintf("不具备访问权限")}, conn)
 		conn.Close()
 		return
 	}
@@ -92,10 +92,6 @@ func (s *Server) handlerConn(conn *Conn) {
 		// 获取请求消息
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			s.Send(&Message{
-				Type: FrameData,
-				Data: fmt.Sprintf("不具备访问权限"),
-			}, conn)
 			s.Errorf("websocket conn readMessage err %v, user Id %s", err, "")
 			// 关闭并删除连接
 			s.Close(conn)
@@ -105,7 +101,8 @@ func (s *Server) handlerConn(conn *Conn) {
 		// 请求信息
 		var message Message
 		if err = json.Unmarshal(msg, &message); err != nil {
-			s.Errorf("json unmarshal err %v, msg %v", err, string(msg))
+			fmt.Println(json.Unmarshal(msg, &message))
+			s.Send(NewErrorMessage(err), conn)
 			s.Close(conn)
 			return
 		}
@@ -114,14 +111,14 @@ func (s *Server) handlerConn(conn *Conn) {
 		switch message.Type {
 		case FramePing:
 			// ping
-			s.Send(&Message{Type: FrameData}, conn)
+			s.Send(&Message{Type: FramePing}, conn)
 		case FrameData:
 			// 处理
 			if handler, ok := s.routes[message.Method]; ok {
 				handler(s, conn, &message)
 			} else {
 				s.Send(&Message{
-					Type: FrameData,
+					Type: FrameErr,
 					Data: fmt.Sprintf("不存在请求方法 %v 请仔细检查", message.Method),
 				}, conn)
 			}

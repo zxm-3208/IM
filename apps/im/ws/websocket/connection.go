@@ -9,8 +9,9 @@ import (
 )
 
 type Conn struct {
-	*websocket.Conn
+	Uid string
 
+	*websocket.Conn
 	s *Server
 
 	idleMu            sync.Mutex // 互斥锁
@@ -88,6 +89,10 @@ func (c *Conn) WriteMessage(messageType int, data []byte) error {
 }
 
 func (c *Conn) Close() error {
-	close(c.done)
+	select {
+	case <-c.done:
+	default:
+		close(c.done)
+	}
 	return c.Conn.Close()
 }
