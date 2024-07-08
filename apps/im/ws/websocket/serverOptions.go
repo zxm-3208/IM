@@ -5,10 +5,13 @@ import "time"
 type Options func(opt *option)
 
 type option struct {
-	Authentication // 嵌入接口
-	pattern        string
-
+	Authentication    // 嵌入接口
+	pattern           string
 	maxConnectionIdle time.Duration
+
+	ack          AckType
+	ackTimeout   time.Duration
+	sendErrCount int
 }
 
 func newOption(opt ...Options) option {
@@ -16,6 +19,8 @@ func newOption(opt ...Options) option {
 		Authentication:    new(authentication),
 		pattern:           "/ws",
 		maxConnectionIdle: defaultMaxConnectionIdle,
+		ackTimeout:        defaultAckTimeout,
+		sendErrCount:      defaultSendErrCount,
 	}
 
 	for _, opt := range opt {
@@ -42,5 +47,11 @@ func WithMaxConnectionIdle(maxConnectionIdle time.Duration) Options {
 		if maxConnectionIdle > 0 {
 			opt.maxConnectionIdle = maxConnectionIdle
 		}
+	}
+}
+
+func WithServerAck(ack AckType) Options {
+	return func(opt *option) {
+		opt.ack = ack
 	}
 }

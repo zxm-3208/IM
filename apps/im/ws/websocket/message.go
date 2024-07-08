@@ -1,19 +1,26 @@
 package websocket
 
+import "time"
+
 type FrameType uint8
 
 const (
-	FrameData FrameType = 0x0
-	FramePing FrameType = 0x1
-	FrameErr  FrameType = 0x2
+	FrameData  FrameType = 0x0
+	FramePing  FrameType = 0x1
+	FrameErr   FrameType = 0x2
+	FrameAck   FrameType = 0x3
+	FrameNoAck FrameType = 0x4
 )
 
 type Message struct {
-	Type   FrameType   `json:"frameType"`
-	Method string      `json:"method,omitempty"`
-	UserId string      `json:"userId,omitempty"`
-	FromId string      `json:"fromId,omitempty"`
-	Data   interface{} `json:"data,omitempty"`
+	Type     FrameType   `json:"frameType"`
+	Id       string      `json:"Id"`
+	Method   string      `json:"method"`
+	FromId   string      `json:"fromId"`
+	Data     interface{} `json:"data"`
+	AckSeq   int         `json:"ackSeq"`
+	ackTime  time.Time   `json:"ackTime"`
+	errCount int         `json:"errCount"`
 }
 
 func NewMessage(fid string, data interface{}) *Message {
