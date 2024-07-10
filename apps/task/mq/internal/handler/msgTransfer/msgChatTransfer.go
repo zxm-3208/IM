@@ -3,6 +3,7 @@ package msgTransfer
 import (
 	"IM/apps/im/immodels"
 	"IM/apps/im/ws/websocket"
+	"IM/apps/social/rpc/socialclient"
 	"IM/apps/task/mq/internal/svc"
 	"IM/apps/task/mq/mq"
 	"IM/pkg/constants"
@@ -46,13 +47,12 @@ func (m *MsgChatTransfer) Consume(key, value string) error {
 	}
 
 	// 推送消息(推送到mq的Wsclient中)
-	return m.svcCtx.WsClient.Send(websocket.Message{
-		Type:   websocket.FrameData,
-		Method: "push",
-		FromId: constants.SYSTEM_ROOT_UID,
-		Data:   data,
-	})
-
+	switch data.ChatType {
+	case constants.SingleChatType:
+		return m.single(ctx, &data)
+	case constants.GroupChatType:
+		return m.group(ctx, &data)
+	}
 	return nil
 }
 
@@ -73,4 +73,37 @@ func (m *MsgChatTransfer) addChatLog(ctx context.Context, data *mq.MsgChatTransf
 		return err
 	}
 	return m.svcCtx.ConversationModel.UpdateMsg(ctx, &chatLog)
+}
+
+func (m *MsgChatTransfer) single(ctx context.Context, data *mq.MsgChatTransfer) error {
+	return m.svcCtx.WsClient.Send(websocket.Message{
+		Type:   websocket.FrameData,
+		Method: "push",
+		FromId: constants.SYSTEM_ROOT_UID,
+		Data:   data,
+	})
+}
+
+func (m *MsgChatTransfer) group(ctx context.Context, data *mq.MsgChatTransfer) error {
+	res, err := m.svcCtx.Social.GroupUsers(ctx, &socialclient.GroupUsersReq{
+		GroupId: data.RecvId,
+	})
+	if err != nil {
+		return err
+	}
+
+	data.RecvIds = make([]string, 0, len(res.List))
+	for _, member := range res.List {
+		// 跳过发送人
+		if member.UserId == data.SendId {
+			continue
+		}
+		data.RecvIds = append(data.RecvIds, member.UserId)
+	}
+	return m.svcCtx.WsClient.Send(websocket.Message{
+		Type:   websocket.FrameData,
+		Method: "push",
+		FromId: constants.SYSTEM_ROOT_UID,
+		Data:   data,
+	})
 }

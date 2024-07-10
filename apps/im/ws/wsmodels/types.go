@@ -27,10 +27,12 @@ type (
 		// 发送者
 		SendId string `json:"sendId"`
 		// 接收者
-		RecvId string `json:"recvId"`
-
+		RecvId  string   `json:"recvId"`
+		RecvIds []string `json:"recvIds"`
+		// 消息类型
 		constants.MType `mapstructure:"mType"`
-		Content         string `mapstructure:"content"`
+		// 内容
+		Content string `mapstructure:"content"`
 		// 发送时间
 		SendTime int64 `json:"sendTime"`
 	}

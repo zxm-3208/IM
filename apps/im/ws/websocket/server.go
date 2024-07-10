@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/threading"
 	"net/http"
 	"sync"
 	"time"
@@ -46,6 +47,8 @@ type Server struct {
 
 	upgrader websocket.Upgrader // 将http升级为WebSocket连接
 	logx.Logger
+
+	*threading.TaskRunner
 }
 
 func NewServer(addr string, opts ...Options) *Server {
@@ -61,6 +64,7 @@ func NewServer(addr string, opts ...Options) *Server {
 		routes:     make(map[string]HandlerFunc),
 		connToUser: make(map[*Conn]string),
 		userToConn: make(map[string]*Conn),
+		TaskRunner: threading.NewTaskRunner(opt.concurrency), // 创建一个任务运行器，用于异步地执行任务,并指定了并发执行任务的最大数量
 	}
 }
 

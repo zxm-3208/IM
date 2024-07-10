@@ -12,6 +12,7 @@ type option struct {
 	ack          AckType
 	ackTimeout   time.Duration
 	sendErrCount int
+	concurrency  int
 }
 
 func newOption(opt ...Options) option {
@@ -21,6 +22,7 @@ func newOption(opt ...Options) option {
 		maxConnectionIdle: defaultMaxConnectionIdle,
 		ackTimeout:        defaultAckTimeout,
 		sendErrCount:      defaultSendErrCount,
+		concurrency:       defaultConcurrency,
 	}
 
 	for _, opt := range opt {
@@ -53,5 +55,11 @@ func WithMaxConnectionIdle(maxConnectionIdle time.Duration) Options {
 func WithServerAck(ack AckType) Options {
 	return func(opt *option) {
 		opt.ack = ack
+	}
+}
+
+func WithConcurrency(concurrency int) Options {
+	return func(opt *option) {
+		opt.concurrency = concurrency
 	}
 }
