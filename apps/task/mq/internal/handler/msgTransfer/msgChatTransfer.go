@@ -38,6 +38,8 @@ func (m *MsgChatTransfer) Consume(key, value string) error {
 		return err
 	}
 
+	// todo: 判断消息类型，进行ack确认
+
 	// 记录数据
 	if err := m.addChatLog(ctx, &data); err != nil {
 		return err
@@ -66,5 +68,9 @@ func (m *MsgChatTransfer) addChatLog(ctx context.Context, data *mq.MsgChatTransf
 		MsgContent:     data.MsgContent,
 		SendTime:       data.SendTime,
 	}
-	return m.svcCtx.ChatLogModel.Insert(ctx, &chatLog)
+	err := m.svcCtx.ChatLogModel.Insert(ctx, &chatLog)
+	if err != nil {
+		return err
+	}
+	return m.svcCtx.ConversationModel.UpdateMsg(ctx, &chatLog)
 }

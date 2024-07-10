@@ -37,19 +37,5 @@ func Chat(srvCtx *svc.ServiceContext) websocket.HandlerFunc {
 				return
 			}
 		}
-
-		//l := logic.NewConversation(context.Background(), srv, srvCtx)
-		//if err := l.SingleChat(&data, srv.GetUsers(conn)[0]); err != nil {
-		//	srv.Send(websocket.NewErrorMessage(err), conn)
-		//}
-
-		//srv.SendByUserId(websocket.NewMessage(conn.Uid, wsmodels.Chat{
-		//	ConversationId: data.ConversationId,
-		//	SendId:         data.SendId,
-		//	RecvId:         data.RecvId,
-		//	ChatType:       data.ChatType,
-		//	SendTime:       time.Now().UnixNano(),
-		//	Msg:            data.Msg,
-		//}), data.RecvId)
 	}
 }

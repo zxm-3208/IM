@@ -16,13 +16,15 @@ type ServiceContext struct {
 	*redis.Redis
 
 	immodels.ChatLogModel
+	immodels.ConversationModel
 }
 
 func NewServiceContext(config config.Config) *ServiceContext {
 	svc := &ServiceContext{
-		Config:       config,
-		Redis:        redis.MustNewRedis(config.Redisx),
-		ChatLogModel: immodels.MustChatLogModel(config.Mongo.Url, config.Mongo.Db),
+		Config:            config,
+		Redis:             redis.MustNewRedis(config.Redisx),
+		ChatLogModel:      immodels.MustChatLogModel(config.Mongo.Url, config.Mongo.Db),
+		ConversationModel: immodels.MustConversationModel(config.Mongo.Url, config.Mongo.Db),
 	}
 
 	token, err := svc.GetSystemToken()

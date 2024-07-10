@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var DefaultChatLogLimit int64 = 100
+
 type ChatLog struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id, omitempty"` // omitempty表示该字段的值为“零值”，那么在生成时，该字段将被完全省略
 
