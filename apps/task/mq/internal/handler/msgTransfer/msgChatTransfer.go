@@ -2,27 +2,24 @@ package msgTransfer
 
 import (
 	"IM/apps/im/immodels"
-	"IM/apps/im/ws/websocket"
-	"IM/apps/social/rpc/socialclient"
+	"IM/apps/im/ws/wsmodels"
 	"IM/apps/task/mq/internal/svc"
 	"IM/apps/task/mq/mq"
-	"IM/pkg/constants"
+	"IM/pkg/bitmap"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/zeromicro/go-zero/core/logx"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // kafka消费者
 type MsgChatTransfer struct {
-	logx.Logger
-	svcCtx *svc.ServiceContext
+	*baseMsgTransfer
 }
 
 func NewMsgChatTransfer(svc *svc.ServiceContext) *MsgChatTransfer {
 	return &MsgChatTransfer{
-		Logger: logx.WithContext(context.Background()),
-		svcCtx: svc,
+		NewBaseMsgTransfer(svc),
 	}
 }
 
@@ -31,34 +28,37 @@ func (m *MsgChatTransfer) Consume(key, value string) error {
 	fmt.Println("key:", key, "value:", value)
 
 	var (
-		data mq.MsgChatTransfer
-		ctx  = context.Background()
+		data  mq.MsgChatTransfer
+		ctx   = context.Background()
+		msgId = primitive.NewObjectID()
 	)
 
 	if err := json.Unmarshal([]byte(value), &data); err != nil {
 		return err
 	}
 
-	// todo: 判断消息类型，进行ack确认
-
 	// 记录数据
-	if err := m.addChatLog(ctx, &data); err != nil {
+	if err := m.addChatLog(ctx, msgId, &data); err != nil {
 		return err
 	}
 
-	// 推送消息(推送到mq的Wsclient中)
-	switch data.ChatType {
-	case constants.SingleChatType:
-		return m.single(ctx, &data)
-	case constants.GroupChatType:
-		return m.group(ctx, &data)
-	}
-	return nil
+	return m.Transfer(ctx, &wsmodels.Push{
+		ChatType:       data.ChatType,
+		ConversationId: data.ConversationId,
+		SendId:         data.SendId,
+		RecvId:         data.RecvId,
+		RecvIds:        data.RecvIds,
+		MType:          data.MsgType,
+		Content:        data.MsgContent,
+		SendTime:       data.SendTime,
+		MsgId:          msgId.Hex(),
+	})
 }
 
-func (m *MsgChatTransfer) addChatLog(ctx context.Context, data *mq.MsgChatTransfer) error {
+func (m *MsgChatTransfer) addChatLog(ctx context.Context, msgId primitive.ObjectID, data *mq.MsgChatTransfer) error {
 	// 记录消息
 	chatLog := immodels.ChatLog{
+		ID:             msgId,
 		ConversationId: data.ConversationId,
 		SendId:         data.SendId,
 		RecvId:         data.RecvId,
@@ -68,42 +68,14 @@ func (m *MsgChatTransfer) addChatLog(ctx context.Context, data *mq.MsgChatTransf
 		MsgContent:     data.MsgContent,
 		SendTime:       data.SendTime,
 	}
+
+	readRecords := bitmap.NewBitmap(0)
+	readRecords.Set(chatLog.SendId)
+	chatLog.ReadRecords = readRecords.Export()
+
 	err := m.svcCtx.ChatLogModel.Insert(ctx, &chatLog)
 	if err != nil {
 		return err
 	}
 	return m.svcCtx.ConversationModel.UpdateMsg(ctx, &chatLog)
-}
-
-func (m *MsgChatTransfer) single(ctx context.Context, data *mq.MsgChatTransfer) error {
-	return m.svcCtx.WsClient.Send(websocket.Message{
-		Type:   websocket.FrameData,
-		Method: "push",
-		FromId: constants.SYSTEM_ROOT_UID,
-		Data:   data,
-	})
-}
-
-func (m *MsgChatTransfer) group(ctx context.Context, data *mq.MsgChatTransfer) error {
-	res, err := m.svcCtx.Social.GroupUsers(ctx, &socialclient.GroupUsersReq{
-		GroupId: data.RecvId,
-	})
-	if err != nil {
-		return err
-	}
-
-	data.RecvIds = make([]string, 0, len(res.List))
-	for _, member := range res.List {
-		// 跳过发送人
-		if member.UserId == data.SendId {
-			continue
-		}
-		data.RecvIds = append(data.RecvIds, member.UserId)
-	}
-	return m.svcCtx.WsClient.Send(websocket.Message{
-		Type:   websocket.FrameData,
-		Method: "push",
-		FromId: constants.SYSTEM_ROOT_UID,
-		Data:   data,
-	})
 }

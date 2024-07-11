@@ -7,6 +7,7 @@ import (
 	"IM/apps/task/mq/mq"
 	"IM/pkg/constants"
 	"IM/pkg/wuid"
+	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"time"
 )
@@ -40,6 +41,30 @@ func Chat(srvCtx *svc.ServiceContext) websocket.HandlerFunc {
 			MsgType:        data.Msg.MType,
 			MsgContent:     data.Msg.Content,
 		})
+		if err != nil {
+			srv.Send(websocket.NewErrorMessage(err), conn)
+			return
+		}
+	}
+}
+
+// 针对已读未读消息的处理
+func MarkRead(svc *svc.ServiceContext) websocket.HandlerFunc {
+	return func(srv *websocket.Server, conn *websocket.Conn, msg *websocket.Message) {
+		var data wsmodels.MarkRead
+		if err := mapstructure.Decode(msg.Data, &data); err != nil {
+			srv.Send(websocket.NewErrorMessage(err), conn)
+			return
+		}
+		// 将消息发送给已读未读消息队列
+		err := svc.MsgReadTransferClient.Push(&mq.MsgMarkRead{
+			ChatType:       data.ChatType,
+			ConversationId: data.ConversationId,
+			SendId:         conn.Uid,
+			RecvId:         data.RecvId,
+			MsgIds:         data.MsgIds,
+		})
+		fmt.Println(err)
 		if err != nil {
 			srv.Send(websocket.NewErrorMessage(err), conn)
 			return

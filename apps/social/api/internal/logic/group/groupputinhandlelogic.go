@@ -2,14 +2,12 @@ package group
 
 import (
 	"IM/apps/im/rpc/imclient"
+	"IM/apps/social/api/internal/svc"
+	"IM/apps/social/api/internal/types"
 	"IM/apps/social/rpc/socialclient"
 	"IM/pkg/constants"
 	"IM/pkg/ctxdata"
 	"context"
-	"fmt"
-
-	"IM/apps/social/api/internal/svc"
-	"IM/apps/social/api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -30,19 +28,16 @@ func NewGroupPutInHandleLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 
 func (l *GroupPutInHandleLogic) GroupPutInHandle(req *types.GroupPutInHandleRep) (resp *types.GroupPutInHandleResp, err error) {
 	uid := ctxdata.GetUId(l.ctx)
-	fmt.Println("uid:", uid)
 	res, err := l.svcCtx.Social.GroupPutInHandle(l.ctx, &socialclient.GroupPutInHandleReq{
 		GroupReqId:   req.GroupReqId,
 		GroupId:      req.GroupId,
-		HandleUid:    ctxdata.GetUId(l.ctx),
+		HandleUid:    uid,
 		HandleResult: req.HandleResult,
 	})
 
 	if constants.HandlerResult(req.HandleResult) != constants.PassHandlerResult {
 		return
 	}
-
-	fmt.Println("res:", res)
 
 	if err != nil {
 		return nil, err

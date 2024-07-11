@@ -18,6 +18,8 @@ type chatLogModel interface {
 	Update(ctx context.Context, data *ChatLog) (*mongo.UpdateResult, error)
 	Delete(ctx context.Context, id string) (int64, error)
 	ListBySendTime(ctx context.Context, conversationId string, startSendTime, endSendTime, limit int64) ([]*ChatLog, error)
+	ListByMsgIds(ctx context.Context, msgIds []string) ([]*ChatLog, error)
+	UpdateMakeRead(ctx context.Context, id primitive.ObjectID, readRecords []byte) error
 }
 
 type defaultChatLogModel struct {
@@ -29,11 +31,11 @@ func newDefaultChatLogModel(conn *mon.Model) *defaultChatLogModel {
 }
 
 func (m *defaultChatLogModel) Insert(ctx context.Context, data *ChatLog) error {
-	if data.ID.IsZero() {
-		data.ID = primitive.NewObjectID()
-		data.CreateAt = time.Now()
-		data.UpdateAt = time.Now()
-	}
+	//if data.ID.IsZero() {
+	//	data.ID = primitive.NewObjectID()
+	//	data.CreateAt = time.Now()
+	//	data.UpdateAt = time.Now()
+	//}
 
 	_, err := m.conn.InsertOne(ctx, data)
 	return err
@@ -111,5 +113,37 @@ func (m *defaultChatLogModel) ListBySendTime(ctx context.Context, conversationId
 	default:
 		return nil, err
 	}
+}
 
+func (m *defaultChatLogModel) ListByMsgIds(ctx context.Context, msgIds []string) ([]*ChatLog, error) {
+	var data []*ChatLog
+
+	ids := make([]primitive.ObjectID, 0, len(msgIds))
+	for _, id := range msgIds {
+		oid, _ := primitive.ObjectIDFromHex(id) // 将十六进制的字符串转化为MongoDB的ObjectID
+		ids = append(ids, oid)
+	}
+
+	filter := bson.M{
+		"_id": bson.M{
+			"$in": ids,
+		},
+	}
+
+	err := m.conn.Find(ctx, &data, filter)
+	switch err {
+	case nil:
+		return data, nil
+	case mon.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultChatLogModel) UpdateMakeRead(ctx context.Context, id primitive.ObjectID, readRecords []byte) error {
+	_, err := m.conn.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{
+		"readRecords": readRecords,
+	}})
+	return err
 }

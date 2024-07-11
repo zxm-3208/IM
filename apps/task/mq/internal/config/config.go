@@ -24,6 +24,7 @@ type Config struct {
 	}
 
 	MsgChatTransfer kq.KqConf
+	MsgReadTransfer kq.KqConf
 
 	SocialRpc zrpc.RpcClientConf
 }

@@ -13,6 +13,8 @@ import (
 	"encoding/json"
 )
 
+// todo: 判断消息类型，进行ack确认
+
 type Client interface {
 	Close() error
 	Send(v any) error

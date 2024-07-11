@@ -16,12 +16,10 @@ WSserver将消息推送给目标服务(客户端)
 func Push(svcCtx *svc.ServiceContext) websocket.HandlerFunc {
 	return func(srv *websocket.Server, conn *websocket.Conn, msg *websocket.Message) {
 		var data wsmodels.Push
-		fmt.Println("111111111111111111111111111111")
 		if err := mapstructure.Decode(msg.Data, &data); err != nil {
 			srv.Send(websocket.NewErrorMessage(err))
 			return
 		}
-		fmt.Println("data", data)
 		// 发送的目标
 		switch data.ChatType {
 		case constants.SingleChatType:
@@ -46,8 +44,10 @@ func single(srv *websocket.Server, data *wsmodels.Push, recvId string) error {
 		ChatType:       data.ChatType,
 		SendTime:       data.SendTime,
 		Msg: wsmodels.Msg{
-			MType:   data.MType,
-			Content: data.Content,
+			ReadRecords: data.ReadRecords,
+			MsgId:       data.MsgId,
+			MType:       data.MType,
+			Content:     data.Content,
 		},
 	}), rconn)
 }
