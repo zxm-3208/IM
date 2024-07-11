@@ -97,7 +97,9 @@ message GroupCreateReq {
   int32  status = 4;
   string creator_uid = 5;
 }
-message GroupCreateResp {}
+message GroupCreateResp {
+  string id = 1;
+}
 
 message GroupPutinReq {
   string groupId = 2;
@@ -107,7 +109,9 @@ message GroupPutinReq {
   int32  joinSource = 6;
   string inviterUid = 7;
 }
-message GroupPutinResp {}
+message GroupPutinResp {
+  string groupId = 1;
+}
 
 message GroupPutinListReq {
   string groupId = 1;
@@ -121,11 +125,13 @@ message GroupPutInHandleReq {
   string groupId = 2;
   string handleUid = 3;
   int32  handleResult = 4; // 处理结果
-
+  string reqId = 5;
   string username = 6;
   string userAvatarUrl = 7;
 }
-message GroupPutInHandleResp {}
+message GroupPutInHandleResp {
+  string userId = 1;
+}
 
 message GroupListReq{
   string userId = 1;

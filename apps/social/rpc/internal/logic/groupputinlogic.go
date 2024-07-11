@@ -117,13 +117,13 @@ func (l *GroupPutinLogic) GroupPutin(in *social.GroupPutinReq) (*social.GroupPut
 			Int64: int64(constants.PassHandlerResult),
 			Valid: true,
 		}
-		return l.createGroupReq(groupReq)
+		return l.createGroupReq(groupReq, true)
 	}
 
 	// 判断进群方式（管理员、创建者邀请无需验证）
 	if constants.GroupJoinSource(in.JoinSource) == constants.PutInGroupJoinSource {
 		// 用户主动申请入群，需要验证
-		return l.createGroupReq(groupReq)
+		return l.createGroupReq(groupReq, false)
 	}
 
 	// 邀请入群，判断邀请者身份
@@ -146,9 +146,9 @@ func (l *GroupPutinLogic) GroupPutin(in *social.GroupPutinReq) (*social.GroupPut
 			String: in.InviterUid,
 			Valid:  true,
 		}
-		return l.createGroupReq(groupReq)
+		return l.createGroupReq(groupReq, true)
 	}
-	return l.createGroupReq(groupReq)
+	return l.createGroupReq(groupReq, false)
 }
 
 func (l *GroupPutinLogic) createGroupMember(in *social.GroupPutinReq) error {
@@ -171,11 +171,15 @@ func (l *GroupPutinLogic) createGroupMember(in *social.GroupPutinReq) error {
 	return nil
 }
 
-func (l *GroupPutinLogic) createGroupReq(groupReq *socialmodels.GroupRequests) (*social.GroupPutinResp, error) {
+func (l *GroupPutinLogic) createGroupReq(groupReq *socialmodels.GroupRequests, isPass bool) (*social.GroupPutinResp, error) {
 
 	_, err := l.svcCtx.GroupRequestsModel.Insert(l.ctx, groupReq)
 	if err != nil {
 		return nil, errors.Wrapf(xerr.NewDBErr(), "insert group req err %v req %v", err, groupReq)
+	}
+
+	if isPass {
+		return &social.GroupPutinResp{GroupId: groupReq.GroupId}, nil
 	}
 
 	return &social.GroupPutinResp{}, nil

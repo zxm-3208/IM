@@ -6,6 +6,7 @@ import (
 	"IM/pkg/xerr"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 
@@ -82,5 +83,8 @@ func (l *GroupPutInHandleLogic) GroupPutInHandle(in *social.GroupPutInHandleReq)
 			return nil
 		})
 
-	return &social.GroupPutInHandleResp{}, nil
+	fmt.Println("groupReq.ReqId:", groupReq.ReqId)
+	return &social.GroupPutInHandleResp{
+		UserId: groupReq.ReqId,
+	}, nil
 }
