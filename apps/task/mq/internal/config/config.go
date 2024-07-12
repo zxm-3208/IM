@@ -27,4 +27,10 @@ type Config struct {
 	MsgReadTransfer kq.KqConf
 
 	SocialRpc zrpc.RpcClientConf
+
+	MsgReadHandler struct {
+		GroupMsgReadHandler          int
+		GroupMsgReadRecordDelayTime  int64
+		GroupMsgReadRecordDelayCount int
+	}
 }
