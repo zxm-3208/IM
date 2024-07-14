@@ -100,7 +100,7 @@ func (m *defaultChatLogModel) ListBySendTime(ctx context.Context, conversationId
 		}
 	} else {
 		filter["sendTime"] = bson.M{
-			"$lt": startSendTime,
+			"$lte": startSendTime,
 		}
 	}
 
