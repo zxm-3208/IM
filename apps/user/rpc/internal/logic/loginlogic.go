@@ -6,6 +6,7 @@ import (
 	"IM/pkg/encrypt"
 	"IM/pkg/xerr"
 	"context"
+	"github.com/jinzhu/copier"
 	"time"
 
 	"IM/apps/user/rpc/internal/svc"
@@ -55,8 +56,12 @@ func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
 		return nil, err
 	}
 
+	var u user.UserEntity
+	copier.Copy(&u, userEntity)
 	return &user.LoginResp{
 		Token:  token,
 		Expire: now + l.svcCtx.Config.Jwt.AccessExpire,
+		User:   &u,
+		Id:     userEntity.Id,
 	}, nil
 }
