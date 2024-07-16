@@ -11,9 +11,10 @@ need_start_server_shell=(
   task-mq-test.sh
 )
 
-for i in ${need_start_server_shell[*]}; do
-  chmod +x $i
-  ./$i
+for i in ${need_start_server_shell[*]} ; do
+    chmod +x $i
+    sed 's/\r//' -i  $i
+    ./$i
 done
 
 docker ps

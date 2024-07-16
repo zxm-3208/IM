@@ -4,6 +4,7 @@ import (
 	"IM/apps/social/rpc/socialclient"
 	"IM/apps/user/rpc/userclient"
 	"context"
+	"fmt"
 
 	"IM/apps/social/api/internal/svc"
 	"IM/apps/social/api/internal/types"
@@ -37,6 +38,9 @@ func (l *GroupUserListLogic) GroupUserList(req *types.GroupUserListReq) (resp *t
 	}
 
 	userList, err := l.svcCtx.UserRpc.FindUser(l.ctx, &userclient.FindUserReq{Ids: uids})
+
+	fmt.Println("userList:", userList)
+
 	if err != nil {
 		return nil, err
 	}

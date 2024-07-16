@@ -10,7 +10,7 @@ import (
 )
 
 @server (
-	perfix: v1/user
+	prefix: v1/user
 	group:  user
 )
 service user {
@@ -33,4 +33,3 @@ service user {
 	@handler detail
 	get /user (UserInfoReq) returns (UserInfoResp)
 }
-

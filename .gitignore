@@ -7,6 +7,8 @@ gohub
 # 配置文件 #
 *.yaml.*
 *.yaml
+*.toml.*
+*.toml
 
 # Golang #
 ######################
@@ -84,4 +86,4 @@ __debug_bin
 # 前端工具链 #
 ######################
 .sass-cache/*
-node_modules/
+node_modules/!/components/sail/compose-cfg.toml

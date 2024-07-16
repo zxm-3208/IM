@@ -34,3 +34,6 @@ install-server-user-rpc:
 
 install-server-task-mq:
 	cd ./deploy/script && chmod +x task-mq-test.sh && ./task-mq-test.sh
+
+install-server-user-api:
+	cd ./deploy/script && chmod +x user-api-test.sh && ./user-api-test.sh

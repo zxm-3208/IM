@@ -25,7 +25,7 @@ func main() {
 	listen := handler.NewListen(svcCtx)
 
 	serviceGroup := service.NewServiceGroup()
-	defer serviceGroup.Stop()
+	//defer serviceGroup.Stop()
 	for _, s := range listen.Services() {
 		serviceGroup.Add(s)
 	}

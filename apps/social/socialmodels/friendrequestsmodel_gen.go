@@ -67,7 +67,7 @@ func (m *defaultFriendRequestsModel) Trans(ctx context.Context, fn func(ctx cont
 }
 
 func (m *defaultFriendRequestsModel) ListNoHandler(ctx context.Context, userId string) ([]*FriendRequests, error) {
-	query := fmt.Sprintf("select %s from %s where `handle_result` = 1 and `user_id` = ?", friendRequestsRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `handle_result` = 1 and `req_uid` = ?", friendRequestsRows, m.table)
 	var resp []*FriendRequests
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId)
 	switch err {

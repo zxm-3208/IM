@@ -130,6 +130,7 @@ func (s *Server) handlerConn(conn *Conn) {
 	for {
 		// 获取请求消息
 		_, msg, err := conn.ReadMessage()
+		fmt.Println("new msg ", string(msg), err)
 		if err != nil {
 			s.Errorf("websocket conn readMessage err %v, user Id %s", err, "")
 			// 关闭并删除连接
