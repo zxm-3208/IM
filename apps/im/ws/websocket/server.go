@@ -39,8 +39,10 @@ type Server struct {
 	opt            *option
 	authentication Authentication
 
-	routes map[string]HandlerFunc // 方法名和handler对应的路由映射
-	addr   string
+	routes   map[string]HandlerFunc // 方法名和handler对应的路由映射
+	addr     string
+	listenOn string
+	discover Discover
 
 	connToUser map[*Conn]string
 	userToConn map[string]*Conn
@@ -54,18 +56,25 @@ type Server struct {
 func NewServer(addr string, opts ...Options) *Server {
 	opt := newOption(opts...)
 
-	return &Server{
+	s := &Server{
 		authentication: opt.Authentication,
 		opt:            &opt,
 		addr:           addr,
 		upgrader:       websocket.Upgrader{},
 		Logger:         logx.WithContext(context.Background()),
+		discover:       opt.discover,
 
 		routes:     make(map[string]HandlerFunc),
 		connToUser: make(map[*Conn]string),
 		userToConn: make(map[string]*Conn),
 		TaskRunner: threading.NewTaskRunner(opt.concurrency), // 创建一个任务运行器，用于异步地执行任务,并指定了并发执行任务的最大数量
+
+		listenOn: FigureOutListenOn(addr),
 	}
+
+	// 存在服务发现，采用分布式im通信的时候; 默认不做任何处理
+	s.discover.Register(fmt.Sprintf("%s", s.listenOn))
+	return s
 }
 
 func (s *Server) ServerWs(w http.ResponseWriter, r *http.Request) {
@@ -118,6 +127,8 @@ func (s *Server) handlerConn(conn *Conn) {
 	uids := s.GetUsers(conn)
 	conn.Uid = uids[0]
 
+	// 如果存在服务发现则进行注册；默认不做任何处理
+	s.discover.BoundUser(conn.Uid)
 	// 处理任务
 	go s.handlerWrite(conn)
 
@@ -401,7 +412,7 @@ func (s *Server) isAck(message *Message) bool {
 	if message == nil {
 		return s.opt.ack != NoAck
 	}
-	return s.opt.ack != NoAck && message.Type != FrameNoAck
+	return s.opt.ack != NoAck && message.Type != FrameNoAck && message.Type != FrameTranspond
 }
 
 func (s *Server) Close(conn *Conn) {
@@ -416,6 +427,8 @@ func (s *Server) Close(conn *Conn) {
 
 	delete(s.connToUser, conn)
 	delete(s.userToConn, uid)
+
+	s.discover.RelieveUser(uid)
 
 	conn.Close()
 }

@@ -19,12 +19,14 @@ type Client interface {
 	Close() error
 	Send(v any) error
 	Read(v any) error
+	SendUid(v any, uids ...string) error
 }
 
 type client struct {
 	*websocket.Conn
 	host string
 	opt  dailOption
+	Discover
 }
 
 func NewClient(host string, opts ...DailOptions) *client {
@@ -76,4 +78,11 @@ func (c *client) Read(v any) error {
 		return err
 	}
 	return json.Unmarshal(msg, v)
+}
+
+func (c *client) SendUid(v any, uids ...string) error {
+	if c.Discover != nil {
+		return c.Discover.Transpond(v, uids...)
+	}
+	return c.Send(v)
 }

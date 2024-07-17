@@ -13,6 +13,7 @@ type option struct {
 	ackTimeout   time.Duration
 	sendErrCount int
 	concurrency  int
+	discover     Discover
 }
 
 func newOption(opt ...Options) option {
@@ -61,5 +62,11 @@ func WithServerAck(ack AckType) Options {
 func WithConcurrency(concurrency int) Options {
 	return func(opt *option) {
 		opt.concurrency = concurrency
+	}
+}
+
+func WithServerDiscover(discover Discover) Options {
+	return func(opt *option) {
+		opt.discover = discover
 	}
 }

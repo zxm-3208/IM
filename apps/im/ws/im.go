@@ -6,8 +6,11 @@ import (
 	"IM/apps/im/ws/internal/svc"
 	"IM/apps/im/ws/websocket"
 	"IM/pkg/configserver"
+	"IM/pkg/constants"
+	"IM/pkg/ctxdata"
 	"flag"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -58,11 +61,22 @@ func Run(c config.Config) {
 
 	ctx := svc.NewServiceContext(c)
 
-	srv := websocket.NewServer(c.ListenOn,
+	// 设置服务认证的token
+	token, err := ctxdata.GetJwtToken(c.JwtAuth.AccessSecret, time.Now().Unix(), 3153600000, fmt.Sprintf("ws:%s", time.Now().Unix()))
+	if err != nil {
+		panic(err)
+	}
+
+	opts := []websocket.Options{
 		websocket.WithAuthentication(handler.NewJwtAuth(ctx)),
-		websocket.WithMaxConnectionIdle(10*time.Minute),
+		websocket.WithMaxConnectionIdle(10 * time.Minute),
 		websocket.WithServerAck(websocket.OnlyAck),
-	)
+		websocket.WithServerDiscover(websocket.NewRedisDiscover(http.Header{
+			"Authorization": []string{token},
+		}, constants.REDIS_DISCOVER_SRV, c.Redisx)),
+	}
+
+	srv := websocket.NewServer(c.ListenOn, opts...)
 	defer srv.Stop()
 
 	handler.RegisterHandlers(srv, ctx)
