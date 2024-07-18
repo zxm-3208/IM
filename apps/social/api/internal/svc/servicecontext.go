@@ -5,27 +5,88 @@ import (
 	"IM/apps/social/api/internal/config"
 	"IM/apps/social/rpc/socialclient"
 	"IM/apps/user/rpc/userclient"
+	"IM/pkg/interceptor"
+	"IM/pkg/middleware"
 	"github.com/zeromicro/go-zero/core/stores/redis"
+	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
+	"google.golang.org/grpc"
 )
 
-type ServiceContext struct {
-	Config config.Config
+var SocialRetryPolicy = `{
+	"methodConfig" : [{
+		"name": [{
+			"service": "social.social"
+		}],
+		"waitForReady": true,
+		"retryPolicy": {
+			"maxAttempts": 5,
+			"initialBackoff": "0.001s",
+			"maxBackoff": "0.002s",
+			"backoffMultiplier": 1.0,
+			"retryableStatusCodes": ["UNKNOWN", "DEADLINE_EXCEEDED"]
+		}
+	}]
+}`
 
-	UserRpc userclient.User
-	Social  socialclient.Social
-	ImRpc   imclient.Im
+var UserRetryPolicy = `{
+	"methodConfig" : [{
+		"name": [{
+			"service": "user.User"
+		}],
+		"waitForReady": true,
+		"retryPolicy": {
+			"maxAttempts": 5,
+			"initialBackoff": "0.001s",
+			"maxBackoff": "0.002s",
+			"backoffMultiplier": 1.0,
+			"retryableStatusCodes": ["UNKNOWN", "DEADLINE_EXCEEDED"]
+		}
+	}]
+}`
+
+var ImRetryPolicy = `{
+	"methodConfig" : [{
+		"name": [{
+			"service": "im.Im"
+		}],
+		"waitForReady": true,
+		"retryPolicy": {
+			"maxAttempts": 5,
+			"initialBackoff": "0.001s",
+			"maxBackoff": "0.002s",
+			"backoffMultiplier": 1.0,
+			"retryableStatusCodes": ["UNKNOWN", "DEADLINE_EXCEEDED"]
+		}
+	}]
+}`
+
+type ServiceContext struct {
+	Config                config.Config
+	IdempotenceMiddleware rest.Middleware
+	UserRpc               userclient.User
+	Social                socialclient.Social
+	ImRpc                 imclient.Im
 
 	*redis.Redis
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
-		Config: c,
-		Redis:  redis.MustNewRedis(c.Redisx),
-
-		UserRpc: userclient.NewUser(zrpc.MustNewClient(c.UserRpc)),
-		Social:  socialclient.NewSocial(zrpc.MustNewClient(c.SocialRpc)),
-		ImRpc:   imclient.NewIm(zrpc.MustNewClient(c.ImRpc)),
+		Config:                c,
+		Redis:                 redis.MustNewRedis(c.Redisx),
+		IdempotenceMiddleware: middleware.NewIdempotenceMiddleware().Handler,
+		UserRpc: userclient.NewUser(zrpc.MustNewClient(c.UserRpc,
+			zrpc.WithDialOption(grpc.WithDefaultServiceConfig(UserRetryPolicy)),
+			zrpc.WithUnaryClientInterceptor(interceptor.DefaultIdempotentClient),
+		)),
+		Social: socialclient.NewSocial(zrpc.MustNewClient(c.SocialRpc,
+			zrpc.WithDialOption(grpc.WithDefaultServiceConfig(SocialRetryPolicy)),
+			zrpc.WithUnaryClientInterceptor(interceptor.DefaultIdempotentClient),
+		)),
+		ImRpc: imclient.NewIm(zrpc.MustNewClient(c.ImRpc,
+			zrpc.WithDialOption(grpc.WithDefaultServiceConfig(ImRetryPolicy)),
+			zrpc.WithUnaryClientInterceptor(interceptor.DefaultIdempotentClient),
+		)),
 	}
 }

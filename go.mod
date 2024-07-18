@@ -3,6 +3,7 @@ module IM
 go 1.22
 
 require (
+	github.com/HYY-yu/sail-client v0.5.2
 	github.com/edwingeng/wuid v1.0.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -21,7 +22,6 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/HYY-yu/sail-client v0.5.2 // indirect
 	github.com/HYY-yu/seckill.pkg v1.3.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect

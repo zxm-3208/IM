@@ -6,10 +6,28 @@ import (
 	"IM/apps/social/rpc/socialclient"
 	"IM/apps/task/mq/internal/config"
 	"IM/pkg/constants"
+	"IM/pkg/interceptor"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/zrpc"
+	"google.golang.org/grpc"
 	"net/http"
 )
+
+var retryPolicy = `{
+	"methodConfig" : [{
+		"name": [{
+			"service": "social.social"
+		}],
+		"waitForReady": true,
+		"retryPolicy": {
+			"maxAttempts": 5,
+			"initialBackoff": "0.001s",
+			"maxBackoff": "0.002s",
+			"backoffMultiplier": 1.0,
+			"retryableStatusCodes": ["UNKNOWN", "DEADLINE_EXCEEDED"]
+		}
+	}]
+}`
 
 type ServiceContext struct {
 	Config config.Config
@@ -29,7 +47,10 @@ func NewServiceContext(config config.Config) *ServiceContext {
 		Redis:             redis.MustNewRedis(config.Redisx),
 		ChatLogModel:      immodels.MustChatLogModel(config.Mongo.Url, config.Mongo.Db),
 		ConversationModel: immodels.MustConversationModel(config.Mongo.Url, config.Mongo.Db),
-		Social:            socialclient.NewSocial(zrpc.MustNewClient(config.SocialRpc)),
+		Social: socialclient.NewSocial(zrpc.MustNewClient(config.SocialRpc,
+			zrpc.WithDialOption(grpc.WithDefaultServiceConfig(retryPolicy)),
+			zrpc.WithUnaryClientInterceptor(interceptor.DefaultIdempotentClient),
+		)),
 	}
 
 	token, err := svc.GetSystemToken()

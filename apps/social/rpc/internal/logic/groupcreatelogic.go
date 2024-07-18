@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"IM/apps/social/rpc/internal/svc"
+	"IM/apps/social/rpc/social"
 	"IM/apps/social/socialmodels"
 	"IM/pkg/constants"
 	"IM/pkg/wuid"
@@ -8,9 +10,6 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
-
-	"IM/apps/social/rpc/internal/svc"
-	"IM/apps/social/rpc/social"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

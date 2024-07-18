@@ -165,6 +165,7 @@ type (
 	prefix: v1/social
 	group: friend
 	jwt: JwtAuth
+	middleware: IdempotenceMiddleware
 )
 service social {
 	@doc "好友申请"

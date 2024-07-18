@@ -2,15 +2,14 @@ package logic
 
 import (
 	"IM/apps/user/models"
+	"IM/apps/user/rpc/internal/svc"
+	"IM/apps/user/rpc/user"
 	"IM/pkg/ctxdata"
 	"IM/pkg/encrypt"
 	"IM/pkg/xerr"
 	"context"
 	"github.com/jinzhu/copier"
 	"time"
-
-	"IM/apps/user/rpc/internal/svc"
-	"IM/apps/user/rpc/user"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -49,7 +48,8 @@ func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
 		return nil, ErrUserPwdError
 	}
 
-	// 3. 生成token
+	//return nil, errors.New("测试")
+	//3. 生成token
 	now := time.Now().Unix()
 	token, err := ctxdata.GetJwtToken(l.svcCtx.Config.Jwt.AccessSecret, now, l.svcCtx.Config.Jwt.AccessExpire, userEntity.Id)
 	if err != nil {

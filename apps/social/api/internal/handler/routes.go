@@ -13,33 +13,36 @@ import (
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodPost,
-				Path:    "/friend/putIn",
-				Handler: friend.FriendPutInHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPut,
-				Path:    "/friend/putIn",
-				Handler: friend.FriendPutInHandleHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/friend/putIns",
-				Handler: friend.FriendPutInListHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/friends",
-				Handler: friend.FriendListHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/friends/online",
-				Handler: friend.FriendsOnlineHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.IdempotenceMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/friend/putIn",
+					Handler: friend.FriendPutInHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPut,
+					Path:    "/friend/putIn",
+					Handler: friend.FriendPutInHandleHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/friend/putIns",
+					Handler: friend.FriendPutInListHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/friends",
+					Handler: friend.FriendListHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/friends/online",
+					Handler: friend.FriendsOnlineHandler(serverCtx),
+				},
+			}...,
+		),
 		rest.WithJwt(serverCtx.Config.JwtAuth.AccessSecret),
 		rest.WithPrefix("/v1/social"),
 	)

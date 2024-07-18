@@ -2,6 +2,7 @@ package main
 
 import (
 	"IM/pkg/configserver"
+	"IM/pkg/interceptor"
 	"IM/pkg/interceptor/rpcserver"
 	"flag"
 	"fmt"
@@ -72,6 +73,7 @@ func Run(c config.Config) {
 		}
 	})
 	s.AddUnaryInterceptors(rpcserver.LoginInterceptor)
+	s.AddUnaryInterceptors(interceptor.NewIdempotenceServer(interceptor.NewDefaultIdempotent(c.Cache[0].RedisConf)))
 	defer s.Stop()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
