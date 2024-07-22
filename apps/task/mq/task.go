@@ -8,12 +8,17 @@ import (
 	"fmt"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
+	"net/http"
 )
 
 var configFile = flag.String("f", "etc/dev/task.yaml", "the config file")
 
 func main() {
 	flag.Parse()
+
+	go func() {
+		http.ListenAndServe("0.0.0.0:8002", nil)
+	}()
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)

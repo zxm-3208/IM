@@ -5,7 +5,6 @@ import (
 	"IM/apps/im/ws/websocket"
 	"IM/apps/im/ws/wsmodels"
 	"IM/pkg/constants"
-	"fmt"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -54,9 +53,7 @@ func single(srv *websocket.Server, data *wsmodels.Push, recvId string) error {
 
 // 并行发送
 func group(srv *websocket.Server, data *wsmodels.Push) error {
-	fmt.Println("=======")
 	for _, id := range data.RecvIds {
-		fmt.Println(id)
 		func(id string) {
 			srv.Schedule(func() { // TaskRunner接口的方法
 				single(srv, data, id)

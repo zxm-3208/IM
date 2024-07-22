@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"sync"
 	"time"
 )
@@ -19,6 +20,7 @@ var configFile = flag.String("f", "etc/dev/im.yaml", "config file")
 var wg sync.WaitGroup
 
 func main() {
+
 	flag.Parse() // 用于解析命令行参数
 
 	var c config.Config
@@ -55,6 +57,10 @@ func main() {
 }
 
 func Run(c config.Config) {
+	go func() {
+		http.ListenAndServe("0.0.0.0:8000", nil)
+	}()
+
 	if err := c.SetUp(); err != nil {
 		panic(err)
 	}

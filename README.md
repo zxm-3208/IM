@@ -26,20 +26,33 @@
     - 目前只在服务端实现了ack确认， 要实现完整的三次ACK握手，需要在client中重写一遍server，调整msgChatTransfer消费者处理过程
 - [x] 离线消息
 - [x] 群聊
+- [ ] 性能优化
 - [ ] 多种聊天方式(文本，图片，语音)
 - [ ] GPT接入
 - [ ] 基于Langchain 聊天机器人文件，数据库信息读取
 
 ### 2.2 用到的技术
 
-Go-Zero, GRPC, Protoc, docker, 
-
-### 2.3 难点
-
-## 3. 一些细节
-
-## 4. 功能演示Demo
+Go-Zero, GRPC, Protoc, docker,
 
 
+### 3. 性能优化
+
+- 未优化前
+
+压力测试： 
+![img.png](fig/v1_ws_压力测试.png)
+ws服务火焰图
+![img_1.png](fig/v1_ws_火焰图.png)
+mq服务火焰图
+![img.png](fig/v1_mq_火焰图.png)
+可以发现性能瓶颈主要在数据库操作
+
+- V1:
 
 
+可靠性：
+
+有序性：
+
+高可用：

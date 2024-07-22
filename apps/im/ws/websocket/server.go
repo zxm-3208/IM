@@ -213,7 +213,7 @@ func (s *Server) readAck(conn *Conn) {
 		conn.readMessages[0].errCount++
 		conn.messageMu.Unlock()
 		// 随着重试次数增加，等待时间延长
-		tempDelay := time.Duration(200*conn.readMessages[0].errCount) * time.Millisecond
+		tempDelay := time.Duration(200*conn.readMessages[0].errCount) * time.Microsecond
 		if max := 1 * time.Second; tempDelay > max {
 			tempDelay = max
 		}
@@ -236,7 +236,7 @@ func (s *Server) readAck(conn *Conn) {
 		if len(conn.readMessages) == 0 {
 			conn.messageMu.Unlock()
 			// 增加睡眠 (避免忙等，减少CPU使用率)
-			time.Sleep(100 * time.Millisecond)
+			//time.Sleep(10 * time.Nanosecond)
 			continue
 		}
 
@@ -244,8 +244,8 @@ func (s *Server) readAck(conn *Conn) {
 		message := conn.readMessages[0]
 		// 判断是否超过重试次数
 		if message.errCount > s.opt.sendErrCount {
-			s.Infof("conn send fail, message %v, ackType %v, maxSendErrCount %v", message, s.opt.ack.ToString(), s.opt.sendErrCount)
 			conn.messageMu.Unlock()
+			s.Infof("conn send fail, message %v, ackType %v, maxSendErrCount %v", message, s.opt.ack.ToString(), s.opt.sendErrCount)
 			// 因为发送消息多次错误，而选择放弃消息
 			delete(conn.readMessageSeq, message.Id)
 			conn.readMessages = conn.readMessages[1:]
