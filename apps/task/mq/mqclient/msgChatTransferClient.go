@@ -3,6 +3,7 @@ package mqclient
 import (
 	"IM/apps/task/mq/mq"
 	"encoding/json"
+	"fmt"
 	"github.com/zeromicro/go-queue/kq"
 )
 
@@ -30,5 +31,6 @@ func (c *msgChatTransferClient) Push(msg *mq.MsgChatTransfer) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("push", msg)
 	return c.pusher.Push(string(body))
 }

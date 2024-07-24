@@ -36,8 +36,6 @@ func single(srv *websocket.Server, data *wsmodels.Push, recvId string) error {
 		return nil
 	}
 
-	srv.Infof("push msg %v", data)
-
 	return srv.Send(websocket.NewMessage(data.SendId, &wsmodels.Chat{
 		ConversationId: data.ConversationId,
 		ChatType:       data.ChatType,

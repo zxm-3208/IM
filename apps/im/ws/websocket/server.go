@@ -141,7 +141,6 @@ func (s *Server) handlerConn(conn *Conn) {
 	for {
 		// 获取请求消息
 		_, msg, err := conn.ReadMessage()
-		fmt.Println("new msg ", string(msg), err)
 		if err != nil {
 			s.Errorf("websocket conn readMessage err %v, user Id %s", err, "")
 			// 关闭并删除连接
@@ -152,7 +151,6 @@ func (s *Server) handlerConn(conn *Conn) {
 		// 请求信息解析
 		var message Message
 		if err = json.Unmarshal(msg, &message); err != nil {
-			fmt.Println(json.Unmarshal(msg, &message))
 			s.Send(NewErrorMessage(err), conn)
 			s.Close(conn)
 			return
@@ -265,8 +263,8 @@ func (s *Server) readAck(conn *Conn) {
 			}
 			// 把消息从队列中移除
 			conn.readMessages = conn.readMessages[1:]
-			conn.messageMu.Unlock()
 			conn.message <- message
+			conn.messageMu.Unlock()
 			s.Infof("message ack OnlyAck send success mid %v", message.Id)
 		case RigorAck:
 			// 还未发送过确认信息
@@ -424,6 +422,8 @@ func (s *Server) Close(conn *Conn) {
 		// 已经关闭了连接
 		return
 	}
+
+	fmt.Println("连接关闭")
 
 	delete(s.connToUser, conn)
 	delete(s.userToConn, uid)

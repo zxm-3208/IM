@@ -14,6 +14,7 @@ import (
 
 type chatLogModel interface {
 	Insert(ctx context.Context, data *ChatLog) error
+	InsertMany(ctx context.Context, datas []*ChatLog) error
 	FindOne(ctx context.Context, id string) (*ChatLog, error)
 	Update(ctx context.Context, data *ChatLog) (*mongo.UpdateResult, error)
 	Delete(ctx context.Context, id string) (int64, error)
@@ -38,6 +39,15 @@ func (m *defaultChatLogModel) Insert(ctx context.Context, data *ChatLog) error {
 	//}
 
 	_, err := m.conn.InsertOne(ctx, data)
+	return err
+}
+
+func (m *defaultChatLogModel) InsertMany(ctx context.Context, datas []*ChatLog) error {
+	var docs []interface{}
+	for _, data := range datas {
+		docs = append(docs, data)
+	}
+	_, err := m.conn.InsertMany(ctx, docs)
 	return err
 }
 

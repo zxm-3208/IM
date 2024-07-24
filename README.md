@@ -40,7 +40,7 @@ Go-Zero, GRPC, Protoc, docker,
 
 - 未优化前
 
-压力测试： 
+发送消息压力测试： 
 ![img.png](fig/v1_ws_压力测试.png)
 ws服务火焰图
 ![img_1.png](fig/v1_ws_火焰图.png)
@@ -49,7 +49,20 @@ mq服务火焰图
 可以发现性能瓶颈主要在数据库操作
 
 - V1:
+使用协程以及合并插入优化
 
+mq服务火焰图
+![img.png](fig/v2_mq_火焰图.png)
+
+简化一些日志输入,并进一步优化
+ws服务火焰图
+![img.png](fig/v2_ws_火焰图.png)
+mq服务火焰图
+![img_1.png](fig/v2_mq_火焰图优化日志输出.png)
+
+性能瓶颈在ws服务的readAck方法和
+
+- V2: GC优化
 
 可靠性：
 

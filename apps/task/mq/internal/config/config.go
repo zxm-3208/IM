@@ -33,4 +33,10 @@ type Config struct {
 		GroupMsgReadRecordDelayTime  int64
 		GroupMsgReadRecordDelayCount int
 	}
+
+	MsgInsertHandler struct {
+		GroupMsgInsertHandler          int
+		GroupMsgInsertRecordDelayTime  int64
+		GroupMsgInsertRecordDelayCount int
+	}
 }
