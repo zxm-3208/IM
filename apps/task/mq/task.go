@@ -9,11 +9,16 @@ import (
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"net/http"
+	"os"
 )
 
 var configFile = flag.String("f", "etc/dev/task.yaml", "the config file")
 
 func main() {
+
+	pid := os.Getpid()
+	fmt.Printf("进程 PID: %d \n", pid)
+
 	flag.Parse()
 
 	go func() {

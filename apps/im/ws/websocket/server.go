@@ -208,10 +208,11 @@ func (s *Server) readAck(conn *Conn) {
 			return nil
 		}
 		s.Errorf("message ack OnlyAck send err %v message %v", err, msg)
+		conn.messageMu.Lock()
 		conn.readMessages[0].errCount++
-		conn.messageMu.Unlock()
 		// 随着重试次数增加，等待时间延长
 		tempDelay := time.Duration(200*conn.readMessages[0].errCount) * time.Microsecond
+		conn.messageMu.Unlock()
 		if max := 1 * time.Second; tempDelay > max {
 			tempDelay = max
 		}
@@ -229,26 +230,25 @@ func (s *Server) readAck(conn *Conn) {
 		}
 
 		// 从队列中读取新的消息
-		conn.messageMu.Lock() // 涉及到map与slice的读写处理, 需要加锁
+		// 涉及到map与slice的读写处理, 需要加锁
 		// 如果队列中没有消息了，就睡眠避免忙等
 		if len(conn.readMessages) == 0 {
-			conn.messageMu.Unlock()
-			// 增加睡眠 (避免忙等，减少CPU使用率)
-			//time.Sleep(10 * time.Nanosecond)
 			continue
 		}
 
 		// 读取第一条消息
+		conn.messageMu.Lock()
 		message := conn.readMessages[0]
 		// 判断是否超过重试次数
 		if message.errCount > s.opt.sendErrCount {
-			conn.messageMu.Unlock()
 			s.Infof("conn send fail, message %v, ackType %v, maxSendErrCount %v", message, s.opt.ack.ToString(), s.opt.sendErrCount)
 			// 因为发送消息多次错误，而选择放弃消息
 			delete(conn.readMessageSeq, message.Id)
 			conn.readMessages = conn.readMessages[1:]
+			conn.messageMu.Unlock()
 			continue
 		}
+		conn.messageMu.Unlock()
 
 		// 判断ack的方式
 		switch s.opt.ack {
@@ -262,15 +262,18 @@ func (s *Server) readAck(conn *Conn) {
 				continue
 			}
 			// 把消息从队列中移除
+			conn.messageMu.Lock()
 			conn.readMessages = conn.readMessages[1:]
-			conn.message <- message
 			conn.messageMu.Unlock()
+			conn.message <- message
 			s.Infof("message ack OnlyAck send success mid %v", message.Id)
 		case RigorAck:
 			// 还未发送过确认信息
 			if message.AckSeq == 0 {
+				conn.messageMu.Lock()
 				conn.readMessages[0].AckSeq++
 				conn.readMessages[0].ackTime = time.Now()
+				conn.messageMu.Unlock()
 				if err := send(&Message{
 					Type:   FrameAck,
 					AckSeq: message.AckSeq,
@@ -278,7 +281,6 @@ func (s *Server) readAck(conn *Conn) {
 				}, conn); err != nil {
 					continue
 				}
-				conn.messageMu.Unlock()
 				s.Infof("message ack RigorAck send mid %v, seq %v , time%v", message.Id, message.AckSeq, message.ackTime)
 				continue
 			}
@@ -288,6 +290,7 @@ func (s *Server) readAck(conn *Conn) {
 			msgSeq := conn.readMessageSeq[message.Id]
 			if msgSeq.AckSeq > message.AckSeq {
 				// 客户端已确认
+				conn.messageMu.Lock()
 				conn.readMessages = conn.readMessages[1:]
 				conn.messageMu.Unlock()
 				conn.message <- message
@@ -299,6 +302,7 @@ func (s *Server) readAck(conn *Conn) {
 			val := s.opt.ackTimeout - time.Since(message.ackTime)
 			if !message.ackTime.IsZero() && val <= 0 {
 				// 2.1 超时, 删除
+				conn.messageMu.Lock()
 				delete(conn.readMessageSeq, message.Id)
 				conn.readMessages = conn.readMessages[1:]
 				conn.messageMu.Unlock()
@@ -306,7 +310,6 @@ func (s *Server) readAck(conn *Conn) {
 				continue
 			}
 			// 2.2 未超时，重新发送
-			conn.messageMu.Unlock()
 			if err := send(&Message{
 				Type:   FrameAck,
 				Id:     message.Id,

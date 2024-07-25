@@ -60,10 +60,27 @@ ws服务火焰图
 mq服务火焰图
 ![img_1.png](fig/v2_mq_火焰图优化日志输出.png)
 
-性能瓶颈在ws服务的readAck方法和
+性能瓶颈在锁分布(锁受websocket阻塞影响)
 
-- V2: GC优化
+- V2: 细化锁粒度
 
+难点： 
+1. 解决了websocket阻塞引起的死锁问题。(线程1读,(Lock)线程2写(UnLock)，(Lock)线程2写(UnLock)，websocket阻塞，线程1(Lock))
+2. 提高websocket吞吐量
+
+ws服务火焰图
+![img.png](fig/v3_ws_火焰图.png)
+mq服务火焰图
+![img_1.png](fig/v3_mq_火焰图.png)
+
+- V3: 并发测试
+
+3个用户像组群各循环发送5000条消息
+
+ws服务火焰图
+![img.png](fig/v3_ws_火焰图(三个用户并发).png)!
+mq服务火焰图
+![img_1.png](fig/v3_mq_火焰图(三个用户并发).png)
 可靠性：
 
 有序性：

@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
 	"sync"
 	"time"
 )
@@ -57,6 +58,9 @@ func main() {
 }
 
 func Run(c config.Config) {
+	pid := os.Getpid()
+	fmt.Printf("进程 PID: %d \n", pid)
+
 	go func() {
 		http.ListenAndServe("0.0.0.0:8000", nil)
 	}()

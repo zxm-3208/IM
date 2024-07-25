@@ -109,15 +109,15 @@ func (c *Conn) keepalive() {
 
 func (c *Conn) ReadMessage() (messageType int, p []byte, err error) {
 	// 开始忙碌
-	messageType, p, err = c.Conn.ReadMessage() // 平时阻塞，只有有数据到来了才执行
 	c.idleMu.Lock()
 	defer c.idleMu.Unlock()
-	c.idle = time.Time{} // 零值的 time.Time 实例
+	messageType, p, err = c.Conn.ReadMessage() // 平时阻塞，只有有数据到来了才执行
+	c.idle = time.Time{}                       // 零值的 time.Time 实例
 	return
 }
 
 func (c *Conn) WriteMessage(messageType int, data []byte) error {
-	c.idleMu.Lock()
+	c.idleMu.Lock() // 防止并发写错误
 	defer c.idleMu.Unlock()
 	err := c.Conn.WriteMessage(messageType, data) // 阻塞，直到数据被完全写入或遇到错误
 	c.idle = time.Now()                           // 写入后空闲

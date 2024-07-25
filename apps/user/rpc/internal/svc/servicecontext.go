@@ -28,7 +28,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 func (svc *ServiceContext) SetRootToken() error {
 	// 生成jwt todo: jwt过期处理
-	systemToken, err := ctxdata.GetJwtToken(svc.Config.Jwt.AccessSecret, time.Now().Unix(), 3600*24*365, constants.SYSTEM_ROOT_UID)
+	systemToken, err := ctxdata.GetJwtToken(svc.Config.Jwt.AccessSecret, time.Now().Unix(), 3600*24*365*100, constants.SYSTEM_ROOT_UID)
 	if err != nil {
 		return err
 	}

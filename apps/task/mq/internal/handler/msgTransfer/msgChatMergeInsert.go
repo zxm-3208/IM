@@ -75,9 +75,9 @@ func (m *msgMergeInsert) transfer() {
 			timer.Reset(GroupMsgInsertRecordDelayTime / 2)
 			// 推送
 			logx.Infof("超过等待时间合并条件，写入数据库  %v", chatLogs)
+			m.mu.Unlock()
 			m.svcCtx.ChatLogModel.InsertMany(ctx, chatLogs)
 			m.svcCtx.ConversationModel.UpdateMsg(ctx, chatLogs[len(chatLogs)-1])
-			m.mu.Unlock()
 		default:
 			m.mu.Lock()
 			if m.count >= GroupMsgInsertRecordDelayCount {
@@ -86,9 +86,9 @@ func (m *msgMergeInsert) transfer() {
 				m.count = 0
 
 				logx.Infof("达到合并量, 写入数据库 %v", chatLogs)
+				m.mu.Unlock()
 				m.svcCtx.ChatLogModel.InsertMany(ctx, chatLogs)
 				m.svcCtx.ConversationModel.UpdateMsg(ctx, chatLogs[len(chatLogs)-1])
-				m.mu.Unlock()
 				continue
 			}
 
