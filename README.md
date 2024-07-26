@@ -55,6 +55,7 @@ mq服务火焰图
 ![img.png](fig/v2_mq_火焰图.png)
 
 简化一些日志输入,并进一步优化
+
 ws服务火焰图
 ![img.png](fig/v2_ws_火焰图.png)
 mq服务火焰图
@@ -64,23 +65,20 @@ mq服务火焰图
 
 - V2: 细化锁粒度
 
-难点： 
-1. 解决了websocket阻塞引起的死锁问题。(线程1读,(Lock)线程2写(UnLock)，(Lock)线程2写(UnLock)，websocket阻塞，线程1(Lock))
-2. 提高websocket吞吐量
+难点： websocket阻塞与死锁问题
+1. c/s同时使用websocket的connection,因此需要加锁。c/s分别加锁可以保证在单独的client与server同步。
+2. 但是websocket的connection是会阻塞的
+3. 会出现下图的问题
+![img.png](fig/死锁问题_分析.png)
+![img_1.png](fig/死锁问题_分析2.png)
+![img.png](fig/死锁问题_分析3.png)
 
 ws服务火焰图
 ![img.png](fig/v3_ws_火焰图.png)
+
 mq服务火焰图
 ![img_1.png](fig/v3_mq_火焰图.png)
 
-- V3: 并发测试
-
-3个用户像组群各循环发送5000条消息
-
-ws服务火焰图
-![img.png](fig/v3_ws_火焰图(三个用户并发).png)!
-mq服务火焰图
-![img_1.png](fig/v3_mq_火焰图(三个用户并发).png)
 可靠性：
 
 有序性：

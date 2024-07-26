@@ -21,6 +21,7 @@ type Conn struct {
 	done chan struct{} //空结构体类型，它的大小为零。 对应的select用来非阻塞地监听一个或多个通道的活动。select语句会随机选择一个已经准备好的通道表达式进行读取或写入操作。
 
 	messageMu      sync.Mutex
+	connMu         sync.Mutex
 	readMessages   []*Message          // 接收信息处理队列
 	readMessageSeq map[string]*Message // 用于ACk验证，记录ACK机制中消息的处理结果和进展
 	message        chan *Message       // 消息通道，在ack验证完成后将消息投递到writeHandler进行处理
@@ -108,19 +109,21 @@ func (c *Conn) keepalive() {
 }
 
 func (c *Conn) ReadMessage() (messageType int, p []byte, err error) {
+	messageType, p, err = c.Conn.ReadMessage() // 平时阻塞，只有有数据到来了才执行
 	// 开始忙碌
 	c.idleMu.Lock()
 	defer c.idleMu.Unlock()
-	messageType, p, err = c.Conn.ReadMessage() // 平时阻塞，只有有数据到来了才执行
-	c.idle = time.Time{}                       // 零值的 time.Time 实例
+	c.idle = time.Time{} // 零值的 time.Time 实例
 	return
 }
 
 func (c *Conn) WriteMessage(messageType int, data []byte) error {
-	c.idleMu.Lock() // 防止并发写错误
-	defer c.idleMu.Unlock()
+	c.connMu.Lock()
+	defer c.connMu.Unlock()
 	err := c.Conn.WriteMessage(messageType, data) // 阻塞，直到数据被完全写入或遇到错误
-	c.idle = time.Now()                           // 写入后空闲
+	c.idleMu.Lock()                               // 防止并发写错误
+	defer c.idleMu.Unlock()
+	c.idle = time.Now() // 写入后空闲
 	return err
 }
 

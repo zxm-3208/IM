@@ -3,6 +3,7 @@ package websocket
 import (
 	"github.com/gorilla/websocket"
 	"net/url"
+	"sync"
 )
 
 /**
@@ -27,7 +28,7 @@ type client struct {
 	host string
 	opt  dailOption
 	Discover
-	wsConn *Conn
+	mu sync.Mutex
 }
 
 func NewClient(host string, opts ...DailOptions) *client {
@@ -58,10 +59,10 @@ func (c *client) Send(v any) error {
 		return err
 	}
 
-	err = c.wsConn.WriteMessage(websocket.TextMessage, data)
-	//c.wsConn.idleMu.Lock()
-	//defer c.wsConn.idleMu.Unlock()
-	//err = c.WriteMessage(websocket.TextMessage, data)
+	//err = c.wsConn.WriteMessage(websocket.TextMessage, data)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	err = c.WriteMessage(websocket.TextMessage, data)
 	if err == nil {
 		return nil
 	}
@@ -73,13 +74,13 @@ func (c *client) Send(v any) error {
 	}
 
 	c.Conn = conn
-	return c.wsConn.WriteMessage(websocket.TextMessage, data)
+	return c.WriteMessage(websocket.TextMessage, data)
 }
 
 func (c *client) Read(v any) error {
-	//c.wsConn.idleMu.Lock()
-	//defer c.wsConn.idleMu.Unlock()
-	_, msg, err := c.wsConn.ReadMessage()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	_, msg, err := c.ReadMessage()
 	if err != nil {
 		return err
 	}
