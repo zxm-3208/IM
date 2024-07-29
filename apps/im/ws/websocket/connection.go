@@ -40,9 +40,9 @@ func NewConn(s *Server, w http.ResponseWriter, r *http.Request) *Conn {
 		idle:              time.Now(),
 		maxConnectionIdle: s.opt.maxConnectionIdle,
 		done:              make(chan struct{}),
-		message:           make(chan *Message, 1), //1保证可以缓存一个Message的值，且保证了发送和接收操作的顺序，从而确保了数据的有序性
-		readMessageSeq:    make(map[string]*Message, 2),
-		readMessages:      make([]*Message, 0, 2),
+		message:           make(chan *Message, 10), //1保证可以缓存一个Message的值，且保证了发送和接收操作的顺序，从而确保了数据的有序性
+		readMessageSeq:    make(map[string]*Message, 20),
+		readMessages:      make([]*Message, 0, 20),
 	}
 
 	go conn.keepalive()

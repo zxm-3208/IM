@@ -79,22 +79,8 @@ func (m *msgMergeInsert) transfer() {
 			m.svcCtx.ChatLogModel.InsertMany(ctx, chatLogs)
 			m.svcCtx.ConversationModel.UpdateMsg(ctx, chatLogs[len(chatLogs)-1])
 		default:
-			//m.mu.Lock()
-			//if m.count >= GroupMsgInsertRecordDelayCount {
-			//	chatLogs := m.chatLogs
-			//	m.chatLogs = nil
-			//	m.count = 0
-			//
-			//	logx.Infof("达到合并量, 写入数据库 %v", chatLogs)
-			//	m.mu.Unlock()
-			//	m.svcCtx.ChatLogModel.InsertMany(ctx, chatLogs)
-			//	m.svcCtx.ConversationModel.UpdateMsg(ctx, chatLogs[len(chatLogs)-1])
-			//	continue
-			//}
-
 			// 该对象长时间没有达到释放要求，清空并推送消息以节省资源
 			if m.IsIdle() {
-				//m.mu.Unlock()
 				//使得MsgInsertTransfer 清理
 				m.chatLogCh <- &immodels.ChatLog{
 					ChatType:       constants.GroupChatType,
@@ -102,12 +88,11 @@ func (m *msgMergeInsert) transfer() {
 				}
 				continue
 			}
-			//m.mu.Unlock()
-			//tempDelay := GroupMsgInsertRecordDelayTime / 4
-			//if tempDelay > time.Second {
-			//	tempDelay = time.Second
-			//}
-			//time.Sleep(tempDelay)
+			tempDelay := GroupMsgReadRecordDelayTime / 4
+			if tempDelay > time.Second {
+				tempDelay = time.Second
+			}
+			time.Sleep(tempDelay)
 		}
 	}
 }

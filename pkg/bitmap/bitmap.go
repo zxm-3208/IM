@@ -9,7 +9,7 @@ type Bitmap struct {
 
 func NewBitmap(size int) *Bitmap {
 	if size == 0 {
-		size = 1024
+		size = 128
 	}
 	return &Bitmap{
 		bits: make([]byte, size),

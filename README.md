@@ -40,12 +40,14 @@ Go-Zero, GRPC, Protoc, docker,
 
 - 未优化前
 
-发送消息压力测试： 
-![img.png](fig/v1_ws_压力测试.png)
 ws服务火焰图
 ![img_1.png](fig/v1_ws_火焰图.png)
+发送消息qps
+![img.png](fig/v1_消息发送QPS.png)
 mq服务火焰图
 ![img.png](fig/v1_mq_火焰图.png)
+接收消息qps
+![img.png](fig/v1_消息接收QPS.png)
 可以发现性能瓶颈主要在数据库操作
 
 - V1:
@@ -76,11 +78,25 @@ mq服务火焰图
 ws服务火焰图
 ![img.png](fig/v3_ws_火焰图.png)
 
+消息发送QPS：
+![img.png](fig/v3_消息发送QPS.png)
+
 mq服务火焰图
 ![img_1.png](fig/v3_mq_火焰图.png)
 
-可靠性：
+消息消费QPS:
+![img.png](fig/v3_消息接收QPS.png)
 
-有序性：
+- V3: 多用户测试
 
-高可用：
+6个用户同时进行收发，发送消息间隔为1ms
+
+ws服务火焰图
+![img.png](fig/v4_多用户_ws_火焰图.png)
+
+mq服务火焰图
+![img.png](fig/v4_多用户_mq_火焰图.png)
+
+消息消费的QPS
+![img.png](fig/v4_多用户收发消息QPS.png)
+
